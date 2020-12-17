@@ -9,20 +9,13 @@
 #include <sys/wait.h>
 #include <arpa/inet.h>
 
-char *get_filetype(char *filename) {
-    int i = 0;
+char *get_filetype(char *path) {
+    char *filetype;
 
-    for (;filename[i] != '.'; i++) {
-        if (filename[i] == '\0') {
-            return "binary";
-        }
-    }
+    filetype = strtok(path, " ");
+    filetype = strtok(NULL, " .");
 
-    if (strcmp(&filename[i + 1], "html") == 0) {
-        return "text/html";
-    } else {
-        return "multimedia";
-    }
+    return filetype;
 }
 
 char *scan_file(char *path) {
@@ -32,7 +25,6 @@ char *scan_file(char *path) {
         puts("ERROR WITH FILE OPEN");
         return NULL;
     }
-
     char line[256];
     size_t max_line_size = 256;
     size_t line_size;

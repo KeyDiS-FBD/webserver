@@ -157,7 +157,7 @@ char *socket_scan_request(int client_socket) {
 
 void socket_send_message(int client_socket, char *message) {
     int message_len = strlen(message);
-    
+
     if (write(client_socket, message, message_len * sizeof(char)) <= 0) {
         free(message);
         exit(0);
@@ -176,6 +176,7 @@ HTTPreq *my_recv(int client_socket) {
         exit(1);
     }
     buf[rcvd] = '\0';
+    puts(buf);
     req->method = strtok(buf, " \r\n");
     req->path = strtok(NULL, " ");
     req->protocol = strtok(NULL, " \r\n");
