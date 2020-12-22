@@ -3,41 +3,72 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <netdb.h>
+#include <fcntl.h>
 #include <sys/types.h>
 #include <sys/socket.h>
-#include <netinet/in.h>
 #include <sys/wait.h>
+#include <sys/stat.h>
+#include <netinet/in.h>
 #include <arpa/inet.h>
 
 char *get_filetype(char *path) {
     char *filetype;
+    int i = 0;
+    puts("GET_FILETYPE");
+    puts(path);
+    filetype = strtok(path, " \r\n");
 
-    filetype = strtok(path, " ");
-    filetype = strtok(NULL, " .");
-
-    return filetype;
+    for(i = 0; filetype[i] != '.'; i++) {
+        if (filetype[i] == '\0') {
+            return "binary";
+        }
+    }
+    return &filetype[i + 1];
 }
 
 char *scan_file(char *path) {
-    FILE *fp = NULL;
-    fp = fopen(path + 1, "rb");
-    if (fp == NULL) {
+    // FILE *fp = NULL;
+    int fd;
+    char *filedata = NULL;
+    size_t file_size = 0;
+    int rcvd = 0;
+
+    fd = open(path + 1, O_RDONLY, 0);
+    // fp = fopen(path + 1, "rb");
+    // if (fp == NULL) {
+    if (fd < 0) {
         puts("ERROR WITH FILE OPEN");
         return NULL;
     }
-    char line[256];
-    size_t max_line_size = 256;
-    size_t line_size;
-    char *filetext = NULL;
-    size_t filetext_size = 0;
 
-    while (fgets(line, max_line_size, fp) != NULL) {
-        line_size = strlen(line);
-        filetext_size += line_size;
-        filetext = realloc(filetext, (filetext_size + 1) * sizeof(char));
-        strncat(filetext, line, line_size);
+
+
+    // while (fgets(line, max_line_size, fp) != NULL) {
+    //     line_size = strlen(line);
+    //     filetext_size += line_size;
+    //     filetext = realloc(filetext, (filetext_size) * sizeof(char));
+    //     strncat(filetext, line, line_size);
+    //
+    // }
+    while (1) {
+        filedata = realloc(filedata, (file_size + 1) * sizeof(char));
+        filedata[file_size] = '\0';
+        // fread(&filedata[file_size], sizeof(char), 1, fp);
+        rcvd = read(fd, &filedata[file_size], sizeof(char));
+        if (rcvd < 0) {
+        // if (!feof(fp)) {
+            puts("SCAN_FILE");
+            puts(filedata);
+            puts("File read error");
+            free(filedata);
+            return NULL;
+        } else if (rcvd == 0) {
+            break;
+        }
+        file_size++;
     }
-    filetext[filetext_size] = '\0';
-    fclose(fp);
-    return filetext;
+    filedata[file_size] = '\0';
+    // fclose(fp);
+    close(fd);
+    return filedata;
 }

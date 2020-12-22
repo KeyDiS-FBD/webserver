@@ -1,22 +1,12 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdint.h>
-
-#include <unistd.h>
-#include <netdb.h>
-#include <arpa/inet.h>
-#include <netinet/in.h>
-#include <sys/socket.h>
-
 #include <init_socket.h>
 
-#define MAX_CONNECTION 10
+#define MAX_CONNECTION 5
 
 int init_socket(char *address, const int mode);
 int parse_address(char *address, char *ipv4, char *port);
 int socket_accept(int server_socket);
 void socket_send_message(int client_socket, char *message);
+char *get_request(int client_socket);
 
 int init_socket(char *address, const int mode) {
     // open socket, return socket descriptor
@@ -114,12 +104,13 @@ int socket_accept(int server_socket) {
         (struct sockaddr *) &client_address,
         &size)) < 0) {
 
-            perror("Error accept");
-            exit(1);
-        }
-        printf("Connected:\n  ip:%s\n  port:%d\n",
-        inet_ntoa(client_address.sin_addr),
-        ntohs(client_address.sin_port));
+        perror("Error accept");
+        exit(1);
+    }
+
+    printf("Connected:\n  ip:%s\n  port:%d\n",
+                inet_ntoa(client_address.sin_addr),
+                ntohs(client_address.sin_port));
 
     return client_socket;
 }
@@ -157,16 +148,14 @@ char *socket_scan_request(int client_socket) {
 
 void socket_send_message(int client_socket, char *message) {
     int message_len = strlen(message);
-
+    puts(message);
     if (write(client_socket, message, message_len * sizeof(char)) <= 0) {
-        free(message);
         exit(0);
     }
 
 }
 
-HTTPreq *my_recv(int client_socket) {
-    HTTPreq *req = malloc(sizeof(HTTPreq));
+char *get_request(int client_socket) {
     char *buf = malloc(65536 * sizeof(char));
     int rcvd; // size of read data
 
@@ -176,9 +165,5 @@ HTTPreq *my_recv(int client_socket) {
         exit(1);
     }
     buf[rcvd] = '\0';
-    puts(buf);
-    req->method = strtok(buf, " \r\n");
-    req->path = strtok(NULL, " ");
-    req->protocol = strtok(NULL, " \r\n");
-    return req;
+    return buf;
 }

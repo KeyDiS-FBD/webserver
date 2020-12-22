@@ -1,5 +1,5 @@
-#ifndef HTTP_H
-#define HTTP_H
+#ifndef FILE_H
+#define FILE_H
 
 #include <stdio.h>
 #include <string.h>
@@ -13,5 +13,7 @@
 #include <arpa/inet.h>
 
 char *scan_file(char *path);
+char *get_filetype(char *path);
+
 
 #endif
