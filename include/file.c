@@ -26,49 +26,39 @@ char *get_filetype(char *path) {
     return &filetype[i + 1];
 }
 
-char *scan_file(char *path) {
-    // FILE *fp = NULL;
-    int fd;
-    char *filedata = NULL;
-    size_t file_size = 0;
-    int rcvd = 0;
-
-    fd = open(path + 1, O_RDONLY, 0);
-    // fp = fopen(path + 1, "rb");
-    // if (fp == NULL) {
-    if (fd < 0) {
-        puts("ERROR WITH FILE OPEN");
-        return NULL;
-    }
-
-
-
-    // while (fgets(line, max_line_size, fp) != NULL) {
-    //     line_size = strlen(line);
-    //     filetext_size += line_size;
-    //     filetext = realloc(filetext, (filetext_size) * sizeof(char));
-    //     strncat(filetext, line, line_size);
-    //
-    // }
-    while (1) {
-        filedata = realloc(filedata, (file_size + 1) * sizeof(char));
-        filedata[file_size] = '\0';
-        // fread(&filedata[file_size], sizeof(char), 1, fp);
-        rcvd = read(fd, &filedata[file_size], sizeof(char));
-        if (rcvd < 0) {
-        // if (!feof(fp)) {
-            puts("SCAN_FILE");
-            puts(filedata);
-            puts("File read error");
-            free(filedata);
-            return NULL;
-        } else if (rcvd == 0) {
-            break;
-        }
-        file_size++;
-    }
-    filedata[file_size] = '\0';
-    // fclose(fp);
-    close(fd);
-    return filedata;
-}
+// char *scan_file(char *path) {
+//     // FILE *fp = NULL;
+//     int fd;
+//     char *filedata = NULL;
+//     size_t file_size = 0;
+//     int rcvd = 0;
+//
+//     fd = open(path + 1, O_RDONLY, 0);
+//     // fp = fopen(path + 1, "rb");
+//     // if (fp == NULL) {
+//     if (fd < 0) {
+//         puts("ERROR WITH FILE OPEN");
+//         return NULL;
+//     }
+//     while (1) {
+//         filedata = realloc(filedata, (file_size + 1) * sizeof(char));
+//         filedata[file_size] = '\0';
+//         // fread(&filedata[file_size], sizeof(char), 1, fp);
+//         rcvd = read(fd, &filedata[file_size], sizeof(char));
+//         if (rcvd < 0) {
+//         // if (!feof(fp)) {
+//             puts("SCAN_FILE");
+//             puts(filedata);
+//             puts("File read error");
+//             free(filedata);
+//             return NULL;
+//         } else if (rcvd == 0) {
+//             break;
+//         }
+//         file_size++;
+//     }
+//     filedata[file_size] = '\0';
+//     // fclose(fp);
+//     close(fd);
+//     return filedata;
+// }
