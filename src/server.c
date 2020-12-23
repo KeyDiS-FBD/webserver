@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <netdb.h>
+#include <fcntl.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
@@ -78,6 +79,14 @@ void serve(int client_socket);
 //     return 0;
 // }
 
+void send_from_fd(int client_socket, int fd) {
+    char ch;
+
+    while (read(fd, &ch, sizeof(char)) > 0) {
+        if (write(client_socket, &ch, sizeof(char)) <= 0)
+        return;
+    }
+}
 void send_response_404(int client_socket) {
     char *response_404 = "HTTP/1.1 404\r\nContent-type: text/html\r\nContent-length: 50\r\n\r\n";
     char *not_found = "<!DOCTYPE html><html><h1>404-NOT FOUND</h1></html>";
@@ -89,24 +98,25 @@ void send_response_404(int client_socket) {
 
 }
 
+
 void send_response(HTTPreq *req) {
     char *header_http ="HTTP/1.1 200 OK\r\n";
     const char header_type_template[] = "Content-type: %s\r\n";
     const char header_length_template[] = "Content-length: %ld\r\n\r\n";
     char *header_type = malloc(sizeof(header_type_template));
     char *header_length = malloc(sizeof(header_length_template));
-    char *filedata = NULL;
     char *filetype = NULL;
     // int header_size = 0;
     size_t file_size = 0;
     struct stat ck_file;
+    int fd;
 
     filetype = get_filetype(req->path);
     if (strcmp(filetype, "html") == 0 || strcmp(filetype, "txt") == 0) {
         sprintf(header_type, header_type_template, "text/html");
     } else if (strcmp(filetype, "png") == 0) {
         sprintf(header_type, header_type_template, "image/png");
-    
+
     // } else if (access((req->path) + 1, 1) == 0) {
         // free(header_type);
         // free(header_length);
@@ -116,12 +126,22 @@ void send_response(HTTPreq *req) {
     }
     stat(req->path + 1, &ck_file);
     file_size = ck_file.st_size;
-    filedata = scan_file(req->path);
-    if (filedata == NULL) {
-        puts("File not found");
+    fd = open(req->path + 1, O_RDONLY);
+    if (fd < 0) {
+        puts("ERROR WITH FILE OPEN");
         send_response_404(req->client_socket);
+        free(header_type);
+        free(header_length);
         return;
     }
+    // filedata = scan_file(req->path);
+    // if (filedata == NULL) {
+    //     puts("File not found");
+    //     send_response_404(req->client_socket);
+    //     free(header_type);
+    //     free(header_length);
+    //     return;
+    // }
 
     sprintf(header_length, header_length_template, file_size);
 
@@ -129,14 +149,14 @@ void send_response(HTTPreq *req) {
     socket_send_message(req->client_socket, header_http);
     socket_send_message(req->client_socket, header_type); // buf in this moment is type
     socket_send_message(req->client_socket, header_length); // buf in this moment is len
-
+    send_from_fd(req->client_socket, fd);
     // send(req->client_socket, response, strlen(response) * sizeof(char), 0);
     // send(req->client_socket, filetext, filetext_len * sizeof(char), 0);
-    socket_send_message(req->client_socket, filedata);
+    // socket_send_message(req->client_socket, filedata);
 
     // free after using
     free(filetype);
-    free(filedata);
+
     free(header_type);
     free(header_length);
 
